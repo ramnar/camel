@@ -20,6 +20,8 @@
          
          http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
 	
+	<bean id="JPAProcessor" class="com.ramnar.camelservice.JPAProcessor" />
+	<bean id="messageProcessor" class="com.ramnar.camelservice.MessageProcessor" />
 	
 	<bean id="simpleRoute" class="com.ramnar.camelservice.MyRouteBuilder" />
 	<camelContext id="camel" xmlns="http://camel.apache.org/schema/spring">

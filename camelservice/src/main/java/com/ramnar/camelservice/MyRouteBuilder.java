@@ -17,6 +17,9 @@
 package com.ramnar.camelservice;
 
 
+import org.apache.camel.BeanInject;
+import org.apache.camel.Exchange;
+import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
 
 
@@ -27,16 +30,41 @@ import org.apache.camel.builder.RouteBuilder;
  */
 public class MyRouteBuilder extends RouteBuilder {
 
+	@BeanInject
+	private JPAProcessor JPAProcessor;
+	
+
+	@BeanInject
+	private MessageProcessor messageProcessor;
 
     public void configure() {
-        // populate the message queue with some messages
+        onException(Exception.class).handled(true).process(new Processor() {
+
+			@Override
+			public void process(Exchange exchange) throws Exception {
+				exchange.getIn().setBody("Error");
+				
+			}
+        	
+        });
     	
     	from("jetty://http://localhost:8888/greeting")  
-		.log("Received a request")  
-		.setBody(simple("Hello, world!"));
+		.log("Received a request")
+		.process(messageProcessor)
+		.setHeader(Exchange.HTTP_METHOD, constant("GET"))
+		.to("http://jsonplaceholder.typicode.com/posts/1?bridgeEndpoint=true")
+		.process(JPAProcessor)
+		.to("jpa:com.ramnar.model.MessageAudit?persistenceUnit=camel")
+		.process(new Processor() {
+
+			@Override
+			public void process(Exchange exchange) throws Exception {
+				exchange.getIn().setBody(exchange.getProperty("response"));
+				
+			}
+			
+		});
     	
     }
-
-   
 
 }
